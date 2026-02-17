@@ -3,10 +3,14 @@ package handlers
 import (
 	"be-jalan/config"
 	"be-jalan/models"
+	"be-jalan/services/notification"
 	"be-jalan/utils"
 	"crypto/rand"
+	"fmt"
 	"math/big"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -127,8 +131,31 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// TODO: Send Email OTP (emailOTP)
-	// TODO: Send SMS OTP (phoneOTP)
+	// Send Email OTP
+	emailConfig := notification.GetEmailConfig()
+	fmt.Printf("📧 Sending Email using SMTP Host: %s\n", emailConfig.SMTPHost)
+	if err := notification.SendOTPEmail(emailConfig, req.Email, emailOTP, "Verifikasi Email"); err != nil {
+		// Log error but don't fail registration
+		fmt.Printf("⚠️ Failed to send email OTP: %v\n", err)
+	}
+
+	// Send WhatsApp OTP
+	tokenWA := os.Getenv("WA_API_TOKEN")
+	secretWA := os.Getenv("WA_API_SECRET")
+	cfgWA := notification.WhatsAppConfig{
+		APIToken:  tokenWA,
+		APISecret: secretWA,
+	}
+
+	if err := notification.SendWhatsAppOTP(cfgWA, req.PhoneNumber, phoneOTP); err != nil {
+		fmt.Printf("❌ Gagal kirim WhatsApp: %v\n", err)
+	}
+
+	// Optional: Send SMS OTP as backup
+	if err := notification.SendSMSOTP(notification.GetSMSConfig(), req.PhoneNumber, phoneOTP); err != nil {
+		// Log error but don't fail registration
+		fmt.Printf("⚠️ Failed to send SMS OTP: %v\n", err)
+	}
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Registrasi berhasil. Silakan verifikasi email dan nomor telepon Anda.",
@@ -304,11 +331,26 @@ func ForgotPassword(c *gin.Context) {
 		return
 	}
 
-	// TODO: Send OTP via email (using SMTP or transactional email service)
-	// For now, return it in response for testing purposes (remove in production!)
+	// Send OTP via Email or WhatsApp/SMS based on identifier
+	if strings.Contains(req.Email, "@") {
+		// Send via Email
+		if err := notification.SendOTPEmail(notification.GetEmailConfig(), user.Email, otp, "Reset Password"); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email OTP"})
+			return
+		}
+	} else {
+		// Send via WhatsApp
+		if err := notification.SendWhatsAppOTP(notification.GetWhatsAppConfig(), user.PhoneNumber, otp); err != nil {
+			// Try SMS as fallback
+			if err := notification.SendSMSOTP(notification.GetSMSConfig(), user.PhoneNumber, otp); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP"})
+				return
+			}
+		}
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "Kode OTP untuk reset password telah dikirim ke email Anda.",
+		"message":   "Kode OTP untuk reset password telah dikirim.",
 		"debug_otp": otp, // Remove this in production!!
 	})
 }
