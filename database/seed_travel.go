@@ -133,7 +133,8 @@ func SeedTravelData(db *gorm.DB) {
 		UserID:        dummyUser.ID,
 		OrderNo:       fmt.Sprintf("ORD-%d", time.Now().Unix()),
 		VisitorName:   "Budi Santoso",
-		Status:        "PAID",
+		Status:        "CONFIRMED",
+		PaymentStatus: "PAID",
 		TotalAmount:   30000, // 2 Tiket Keraton
 		BookingDate:   time.Now(),
 		PaymentMethod: "QRIS",
@@ -143,19 +144,25 @@ func SeedTravelData(db *gorm.DB) {
 	}
 
 	// Check if order exists (simple check to avoid duplicate dummy data on every restart)
-	var count int64
-	db.Model(&models.Order{}).Where("visitor_name = ?", "Budi Santoso").Count(&count)
-	if count == 0 {
+	var existingOrder models.Order
+	if err := db.Where("visitor_name = ?", "Budi Santoso").First(&existingOrder).Error; err == nil {
+		// FORCE UPDATE STATUS to ensure we have a PAID booking for testing
+		db.Model(&existingOrder).Updates(map[string]interface{}{
+			"status":         "CONFIRMED",
+			"payment_status": "PAID",
+		})
+	} else {
 		db.Create(&order1)
 
 		// Order 2: Pending
 		order2 := models.Order{
-			UserID:      dummyUser.ID,
-			OrderNo:     fmt.Sprintf("ORD-%d", time.Now().Unix()+1),
-			VisitorName: "Siti Rahayu",
-			Status:      "PENDING",
-			TotalAmount: 135000,
-			BookingDate: time.Now().AddDate(0, 0, 1),
+			UserID:        dummyUser.ID,
+			OrderNo:       fmt.Sprintf("ORD-%d", time.Now().Unix()+1),
+			VisitorName:   "Siti Rahayu",
+			Status:        "PENDING",
+			PaymentStatus: "UNPAID",
+			TotalAmount:   135000,
+			BookingDate:   time.Now().AddDate(0, 0, 1),
 			Items: []models.OrderItem{
 				{TicketID: tickets[3].ID, Quantity: 3, PriceAtPurchase: 45000}, // 3 Tiket Safari
 			},

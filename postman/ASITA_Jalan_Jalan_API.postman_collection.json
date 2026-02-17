@@ -305,6 +305,89 @@
 					]
 				},
 				{
+					"name": "Bookings",
+					"item": [
+						{
+							"name": "Stats",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/bookings/stats"
+							}
+						},
+						{
+							"name": "List",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": {
+									"raw": "{{base_url}}/admin/bookings?search=&status=",
+									"host": ["{{base_url}}"],
+									"path": ["admin", "bookings"],
+									"query": [
+										{"key": "search", "value": ""},
+										{"key": "status", "value": ""}
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Manual",
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"destination_id\": 1,\n  \"visitor_name\": \"Walk-in Guest\",\n  \"visitor_email\": \"walkin@guest.com\",\n  \"visitor_phone\": \"081234567890\",\n  \"visit_date\": \"2026-02-20\",\n  \"items\": [\n      { \"ticket_id\": 1, \"quantity\": 2 }\n  ],\n  \"payment_method\": \"CASH\",\n  \"status\": \"CONFIRMED\",\n  \"payment_status\": \"PAID\"\n}"
+								},
+								"url": "{{base_url}}/admin/bookings"
+							}
+						},
+						{
+							"name": "Detail",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/bookings/1"
+							}
+						},
+						{
+							"name": "View E-Ticket",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/bookings/1/eticket"
+							}
+						},
+						{
+							"name": "Update Status",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"COMPLETED\",\n  \"payment_status\": \"PAID\"\n}"
+								},
+								"url": "{{base_url}}/admin/bookings/1/status"
+							}
+						},
+						{
+							"name": "Delete",
+							"request": {
+								"method": "DELETE",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/bookings/1"
+							}
+						}
+					]
+				},
+				{
 					"name": "Destinations",
 					"item": [
 						{

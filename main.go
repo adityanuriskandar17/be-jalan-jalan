@@ -72,6 +72,15 @@ func main() {
 		adminGroup.POST("/tickets", handlers.CreateTicket)
 		adminGroup.PUT("/tickets/:id", handlers.UpdateTicket)
 		adminGroup.DELETE("/tickets/:id", handlers.DeleteTicket)
+
+		// Bookings
+		adminGroup.GET("/bookings/stats", handlers.GetBookingStats)
+		adminGroup.GET("/bookings", handlers.GetBookings)
+		adminGroup.GET("/bookings/:id", handlers.GetBookingDetail)
+		adminGroup.GET("/bookings/:id/eticket", handlers.GetBookingETicket)
+		adminGroup.POST("/bookings", handlers.CreateManualBooking)
+		adminGroup.PUT("/bookings/:id/status", handlers.UpdateBookingStatus)
+		adminGroup.DELETE("/bookings/:id", handlers.DeleteBooking)
 	}
 
 	r.Run(":8080") // listen and serve on 0.0.0.0:8080

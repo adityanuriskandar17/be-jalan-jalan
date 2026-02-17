@@ -54,16 +54,17 @@ type DestinationImage struct {
 
 // Ticket represents purchaseable entry tickets
 type Ticket struct {
-	ID            uint       `gorm:"primaryKey" json:"id"`
-	DestinationID *uint      `gorm:"index" json:"destination_id"`            // Nullable (nil = Master Ticket)
-	Name          string     `gorm:"type:varchar(255);not null" json:"name"` // e.g., "Adult Ticket"
-	Type          string     `gorm:"type:varchar(100)" json:"type"`          // e.g. "Reguler", "Paket"
-	Description   string     `gorm:"type:text" json:"description"`
-	Price         float64    `gorm:"type:decimal(10,2);not null" json:"price"`
-	OriginalPrice float64    `gorm:"type:decimal(10,2)" json:"original_price"` // New: Strikethrough price
-	Stock         int        `gorm:"default:-1" json:"stock"`                  // -1 means unlimited
-	IsActive      bool       `gorm:"default:true" json:"is_active"`
-	ValidityDate  *time.Time `json:"validity_date"`
+	ID            uint         `gorm:"primaryKey" json:"id"`
+	DestinationID *uint        `gorm:"index" json:"destination_id"`                           // Nullable (nil = Master Ticket)
+	Destination   *Destination `gorm:"foreignKey:DestinationID" json:"destination,omitempty"` // Relation
+	Name          string       `gorm:"type:varchar(255);not null" json:"name"`                // e.g., "Adult Ticket"
+	Type          string       `gorm:"type:varchar(100)" json:"type"`                         // e.g. "Reguler", "Paket"
+	Description   string       `gorm:"type:text" json:"description"`
+	Price         float64      `gorm:"type:decimal(10,2);not null" json:"price"`
+	OriginalPrice float64      `gorm:"type:decimal(10,2)" json:"original_price"` // New: Strikethrough price
+	Stock         int          `gorm:"default:-1" json:"stock"`                  // -1 means unlimited
+	IsActive      bool         `gorm:"default:true" json:"is_active"`
+	ValidityDate  *time.Time   `json:"validity_date"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -145,11 +146,12 @@ type Order struct {
 	TotalAmount    float64 `gorm:"type:decimal(10,2);not null" json:"total_amount"`
 
 	// Payment Status & Details
-	Status           string `gorm:"type:varchar(20);default:'PENDING'" json:"status"` // PENDING, PAID, EXPIRED, CANCELLED
-	PaymentMethod    string `gorm:"type:varchar(50)" json:"payment_method"`           // QRIS, VA, E-WALLET
-	PaymentChannel   string `gorm:"type:varchar(50)" json:"payment_channel"`          // GoPay, BCA, Mandiri
-	PaymentReference string `gorm:"type:varchar(255)" json:"payment_reference"`       // VA Number / QR String
-	PaymentURL       string `gorm:"type:text" json:"payment_url"`                     // Deep link / Invoice URL
+	Status           string `gorm:"type:varchar(20);default:'PENDING'" json:"status"`        // Booking Status: PENDING, CONFIRMED, COMPLETED, CANCELLED
+	PaymentStatus    string `gorm:"type:varchar(20);default:'UNPAID'" json:"payment_status"` // Pay Status: UNPAID, PAID
+	PaymentMethod    string `gorm:"type:varchar(50)" json:"payment_method"`                  // QRIS, VA, E-WALLET
+	PaymentChannel   string `gorm:"type:varchar(50)" json:"payment_channel"`                 // GoPay, BCA, Mandiri
+	PaymentReference string `gorm:"type:varchar(255)" json:"payment_reference"`              // VA Number / QR String
+	PaymentURL       string `gorm:"type:text" json:"payment_url"`                            // Deep link / Invoice URL
 
 	PaymentDeadline time.Time  `json:"payment_deadline"` // Expiry time for payment
 	PaymentDate     *time.Time `json:"payment_date"`
