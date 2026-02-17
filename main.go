@@ -86,7 +86,16 @@ func main() {
 		// Users
 		adminGroup.GET("/users/stats", handlers.GetUserStats)
 		adminGroup.GET("/users", handlers.GetUsers)
+		adminGroup.GET("/users/:id", handlers.GetUserDetail) // Detail User
 		adminGroup.PATCH("/users/:id/status", handlers.ToggleUserStatus)
+
+		// Promos
+		adminGroup.GET("/promos/stats", handlers.GetPromoStats)
+		adminGroup.GET("/promos", handlers.GetPromos)
+		adminGroup.GET("/promos/:id", handlers.GetPromoDetail)
+		adminGroup.POST("/promos", handlers.CreatePromo)
+		adminGroup.PUT("/promos/:id", handlers.UpdatePromo)
+		adminGroup.DELETE("/promos/:id", handlers.DeletePromo)
 	}
 
 	r.Run(":8080") // listen and serve on 0.0.0.0:8080

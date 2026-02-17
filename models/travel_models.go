@@ -121,6 +121,7 @@ type PromoCode struct {
 	ValidUntil     time.Time `json:"valid_until"`
 	Quota          int       `json:"quota"` // -1 for unlimited
 	UsedCount      int       `json:"used_count" gorm:"default:0"`
+	IsActive       bool      `gorm:"default:true" json:"is_active"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`

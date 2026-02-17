@@ -146,3 +146,89 @@ func ToggleUserStatus(c *gin.Context) {
 		},
 	})
 }
+
+// --- Detail User ---
+
+type BookingHistoryItem struct {
+	ID          uint    `json:"id"`
+	Destination string  `json:"destination"`
+	Date        string  `json:"date"`
+	Amount      float64 `json:"amount"`
+	Status      string  `json:"status"`
+}
+
+type UserDetailResponse struct {
+	UserListItem
+	BookingHistory []BookingHistoryItem `json:"booking_history"`
+}
+
+// GetUserDetail returns full profile + history
+func GetUserDetail(c *gin.Context) {
+	id := c.Param("id")
+	var user models.User
+	if err := config.DB.First(&user, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// 1. Calculate Stats
+	var totalBooking int64
+	var totalSpent float64
+
+	config.DB.Model(&models.Order{}).Where("user_id = ? AND payment_status = ?", user.ID, "PAID").Count(&totalBooking)
+
+	var sum *float64
+	row := config.DB.Model(&models.Order{}).Where("user_id = ? AND payment_status = ?", user.ID, "PAID").Select("sum(total_amount)").Row()
+	row.Scan(&sum)
+	if sum != nil {
+		totalSpent = *sum
+	}
+
+	// 2. Fetch History
+	var orders []models.Order
+	config.DB.Preload("Items.Ticket.Destination").
+		Where("user_id = ?", user.ID).
+		Order("created_at desc").
+		Limit(10).
+		Find(&orders)
+
+	var history []BookingHistoryItem
+	for _, o := range orders {
+		destName := "Unknown / Manual Ticket"
+		if len(o.Items) > 0 && o.Items[0].Ticket.Destination != nil {
+			destName = o.Items[0].Ticket.Destination.Name
+		} else if len(o.Items) > 0 {
+			destName = o.Items[0].Ticket.Name // Fallback to ticket name
+		}
+
+		history = append(history, BookingHistoryItem{
+			ID:          o.ID,
+			Destination: destName,
+			Date:        o.BookingDate.Format("02 Jan 2006"),
+			Amount:      o.TotalAmount,
+			Status:      o.Status,
+		})
+	}
+
+	status := "Suspended"
+	if user.IsActive {
+		status = "Active"
+	}
+
+	resp := UserDetailResponse{
+		UserListItem: UserListItem{
+			ID:           user.ID,
+			FullName:     user.FullName,
+			Email:        user.Email,
+			PhoneNumber:  user.PhoneNumber,
+			JoinDate:     user.CreatedAt.Format("02 Jan 2006"),
+			TotalBooking: int(totalBooking),
+			TotalSpent:   totalSpent,
+			Status:       status,
+			IsActive:     user.IsActive,
+		},
+		BookingHistory: history,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
