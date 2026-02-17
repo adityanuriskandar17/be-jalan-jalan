@@ -65,6 +65,13 @@ func main() {
 		adminGroup.POST("/categories", handlers.CreateCategory)
 		adminGroup.PUT("/categories/:id", handlers.UpdateCategory)
 		adminGroup.DELETE("/categories/:id", handlers.DeleteCategory)
+
+		// Tickets
+		adminGroup.GET("/tickets/stats", handlers.GetTicketStats)
+		adminGroup.GET("/tickets", handlers.GetTickets)
+		adminGroup.POST("/tickets", handlers.CreateTicket)
+		adminGroup.PUT("/tickets/:id", handlers.UpdateTicket)
+		adminGroup.DELETE("/tickets/:id", handlers.DeleteTicket)
 	}
 
 	r.Run(":8080") // listen and serve on 0.0.0.0:8080

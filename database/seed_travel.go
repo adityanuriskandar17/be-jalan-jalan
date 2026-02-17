@@ -65,28 +65,58 @@ func SeedTravelData(db *gorm.DB) {
 	// 3. Seed Tickets
 	tickets := []models.Ticket{
 		{
-			DestinationID: destinations[0].ID, // Keraton
+			DestinationID: &destinations[0].ID, // Keraton
 			Name:          "Tiket Masuk Dewasa",
+			Type:          "Reguler",
 			Price:         15000,
 		},
 		{
-			DestinationID: destinations[0].ID, // Keraton
+			DestinationID: &destinations[0].ID, // Keraton
 			Name:          "Tiket Masuk Anak",
+			Type:          "Reguler",
 			Price:         10000,
 		},
 		{
-			DestinationID: destinations[1].ID, // Balekambang
+			DestinationID: &destinations[1].ID, // Balekambang
 			Name:          "Tiket Masuk",
+			Type:          "Reguler",
 			Price:         0,
 		},
 		{
-			DestinationID: destinations[2].ID, // Safari
+			DestinationID: &destinations[2].ID, // Safari
 			Name:          "Tiket Reguler",
+			Type:          "Reguler",
 			Price:         45000,
+		},
+		{
+			DestinationID: &destinations[0].ID, // Keraton
+			Name:          "Paket Foto Adat",
+			Type:          "Paket",
+			Price:         50000,
+			OriginalPrice: 75000,
+		},
+		{
+			DestinationID: &destinations[2].ID, // Safari
+			Name:          "Paket Safari Feeding",
+			Type:          "Paket",
+			Price:         75000,
+			OriginalPrice: 100000,
 		},
 	}
 	for i, ticket := range tickets {
-		db.FirstOrCreate(&tickets[i], models.Ticket{DestinationID: ticket.DestinationID, Name: ticket.Name})
+		var existingTicket models.Ticket
+		// Check if ticket exists
+		if err := db.Where("destination_id = ? AND name = ?", ticket.DestinationID, ticket.Name).First(&existingTicket).Error; err == nil {
+			// Exists: Update it (especially Type)
+			db.Model(&existingTicket).Updates(map[string]interface{}{
+				"type":           ticket.Type,
+				"price":          ticket.Price,
+				"original_price": ticket.OriginalPrice,
+			})
+		} else {
+			// Not exists: Create it
+			db.Create(&tickets[i])
+		}
 	}
 
 	// 4. Seed Dummy Users (for bookings)

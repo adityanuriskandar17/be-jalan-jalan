@@ -55,12 +55,14 @@ type DestinationImage struct {
 // Ticket represents purchaseable entry tickets
 type Ticket struct {
 	ID            uint       `gorm:"primaryKey" json:"id"`
-	DestinationID uint       `gorm:"index;not null" json:"destination_id"`
+	DestinationID *uint      `gorm:"index" json:"destination_id"`            // Nullable (nil = Master Ticket)
 	Name          string     `gorm:"type:varchar(255);not null" json:"name"` // e.g., "Adult Ticket"
-	Category      string     `gorm:"type:varchar(100)" json:"category"`      // New: e.g. "Entrance", "Wahana"
+	Type          string     `gorm:"type:varchar(100)" json:"type"`          // e.g. "Reguler", "Paket"
 	Description   string     `gorm:"type:text" json:"description"`
 	Price         float64    `gorm:"type:decimal(10,2);not null" json:"price"`
-	Stock         int        `gorm:"default:-1" json:"stock"` // -1 means unlimited
+	OriginalPrice float64    `gorm:"type:decimal(10,2)" json:"original_price"` // New: Strikethrough price
+	Stock         int        `gorm:"default:-1" json:"stock"`                  // -1 means unlimited
+	IsActive      bool       `gorm:"default:true" json:"is_active"`
 	ValidityDate  *time.Time `json:"validity_date"`
 
 	CreatedAt time.Time      `json:"created_at"`
