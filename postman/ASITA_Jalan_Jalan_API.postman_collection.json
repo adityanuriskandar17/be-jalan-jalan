@@ -249,6 +249,136 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/dashboard",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"dashboard"
+							]
+						},
+						"description": "Get statistics for Admin Dashboard (Revenue, Bookings, Active Users, etc.)"
+					}
+				},
+				{
+					"name": "Upload Image",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"body": {
+							"mode": "formdata",
+							"formdata": [{"key": "image", "type": "file", "src": []}]
+						},
+						"url": "{{base_url}}/admin/upload"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.url) {",
+									"    pm.environment.set(\"uploaded_image_url\", jsonData.data.url);",
+									"    console.log(\"Uploaded Image URL saved:\", jsonData.data.url);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Destinations",
+					"item": [
+						{
+							"name": "Stats",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/destinations/stats"
+							}
+						},
+						{
+							"name": "List",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/destinations?page=1&limit=10&search="
+							}
+						},
+						{
+							"name": "Create",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Bearer {{token}}"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Keraton Kasunanan Surakarta\",\n  \"city\": \"Solo\",\n  \"address\": \"Jl. Slamet Riyadi No.275\",\n  \"description\": \"Istana resmi kesultanan...\",\n  \"price_start_from\": 10000,\n  \"rating_average\": 4.8,\n  \"is_popular\": true,\n  \"is_active\": true,\n  \"facilities\": \"Toilet, Mushola, Area Parkir, Spot Foto\",\n  \"open_time\": \"08:00\",\n  \"close_time\": \"17:00\",\n  \"categories\": [\n      {\n          \"id\": 1\n      }\n  ],\n  \"tickets\": [\n      {\n          \"name\": \"Tiket Masuk Dewasa\",\n          \"category\": \"Entrance\",\n          \"price\": 15000\n      },\n      {\n          \"name\": \"Paket Tour + Foto\",\n          \"category\": \"Package\",\n          \"price\": 50000\n      }\n  ],\n  \"images\": [\n      {\n          \"image_url\": \"{{uploaded_image_url}}\",\n          \"is_main\": true\n      }\n  ]\n}"
+								},
+								"url": "{{base_url}}/admin/destinations"
+							}
+						},
+						{
+							"name": "Update",
+							"request": {
+								"method": "PUT",
+								"header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Bearer {{token}}"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated Name\"\n}"
+								},
+								"url": "{{base_url}}/admin/destinations/1"
+							}
+						},
+						{
+							"name": "Toggle Status",
+							"request": {
+								"method": "PATCH",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/destinations/1/status"
+							}
+						},
+						{
+							"name": "Delete",
+							"request": {
+								"method": "DELETE",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/destinations/1"
+							}
+						}
+					]
+				},
+				{
+					"name": "Categories",
+					"item": [
+						{
+							"name": "List",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/categories"
+							}
+						}
+					]
+				}
+			]
 		}
 	],
 	"variable": [
