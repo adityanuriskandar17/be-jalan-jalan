@@ -78,6 +78,7 @@ func main() {
 		adminGroup.GET("/bookings", handlers.GetBookings)
 		adminGroup.GET("/bookings/:id", handlers.GetBookingDetail)
 		adminGroup.GET("/bookings/:id/eticket", handlers.GetBookingETicket)
+		adminGroup.POST("/bookings/scan", handlers.ScanTicket) // New: Scan QR
 		adminGroup.POST("/bookings", handlers.CreateManualBooking)
 		adminGroup.PUT("/bookings/:id/status", handlers.UpdateBookingStatus)
 		adminGroup.DELETE("/bookings/:id", handlers.DeleteBooking)

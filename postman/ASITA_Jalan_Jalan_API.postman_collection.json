@@ -384,6 +384,21 @@
 								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
 								"url": "{{base_url}}/admin/bookings/1"
 							}
+						},
+						{
+							"name": "Scan Ticket (Check-In)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"qr_code\": \"ORD-1234567890\"\n}"
+								},
+								"url": "{{base_url}}/admin/bookings/scan"
+							}
 						}
 					]
 				},

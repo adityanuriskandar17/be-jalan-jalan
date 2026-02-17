@@ -132,6 +132,7 @@ func SeedTravelData(db *gorm.DB) {
 	order1 := models.Order{
 		UserID:        dummyUser.ID,
 		OrderNo:       fmt.Sprintf("ORD-%d", time.Now().Unix()),
+		TicketCode:    fmt.Sprintf("TKT-%d%s", time.Now().UnixNano()/1000, "A"),
 		VisitorName:   "Budi Santoso",
 		Status:        "CONFIRMED",
 		PaymentStatus: "PAID",
@@ -150,6 +151,7 @@ func SeedTravelData(db *gorm.DB) {
 		db.Model(&existingOrder).Updates(map[string]interface{}{
 			"status":         "CONFIRMED",
 			"payment_status": "PAID",
+			"ticket_code":    fmt.Sprintf("TKT-%d%s", time.Now().UnixNano()/1000, "U"),
 		})
 	} else {
 		db.Create(&order1)
@@ -158,6 +160,7 @@ func SeedTravelData(db *gorm.DB) {
 		order2 := models.Order{
 			UserID:        dummyUser.ID,
 			OrderNo:       fmt.Sprintf("ORD-%d", time.Now().Unix()+1),
+			TicketCode:    fmt.Sprintf("TKT-%d%s", time.Now().UnixNano()/1000, "B"),
 			VisitorName:   "Siti Rahayu",
 			Status:        "PENDING",
 			PaymentStatus: "UNPAID",

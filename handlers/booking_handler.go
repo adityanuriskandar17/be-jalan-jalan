@@ -136,8 +136,8 @@ func GetBookingETicket(c *gin.Context) {
 		"message": "E-Ticket is valid",
 		"data": gin.H{
 			"order_no":         order.OrderNo,
-			"qr_code_data":     order.OrderNo, // To be rendered as QR by Frontend
-			"barcode_data":     order.OrderNo, // To be rendered as Barcode
+			"qr_code_data":     order.TicketCode, // Use TicketCode (Secure)
+			"barcode_data":     order.OrderNo,    // Barcode can remain OrderNo
 			"visitor_name":     order.VisitorName,
 			"visitor_email":    order.VisitorEmail,
 			"visit_date":       order.BookingDate,
@@ -235,9 +235,13 @@ func CreateManualBooking(c *gin.Context) {
 		userID = newUser.ID
 	}
 
+	// Helper for random string
+	ticketCode := fmt.Sprintf("TKT-%d%s", time.Now().UnixNano()/1000, "X") // Simplified unique code
+
 	order := models.Order{
 		UserID:        userID,
 		OrderNo:       fmt.Sprintf("M-BK-%d", time.Now().Unix()), // Manual Booking Prefix
+		TicketCode:    ticketCode,                                // Secure Code
 		VisitorName:   req.VisitorName,
 		VisitorEmail:  req.VisitorEmail,
 		VisitorPhone:  req.VisitorPhone,
@@ -301,4 +305,85 @@ func DeleteBooking(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Booking deleted"})
+}
+
+// --- SCAN / CHECK-IN SYSTEM ---
+
+type ScanTicketRequest struct {
+	QRCode string `json:"qr_code" binding:"required"` // Content of QR Code (Order No)
+}
+
+// ScanTicket handles the gatekeeper/staff scanning a visitor's QR code
+func ScanTicket(c *gin.Context) {
+	var req ScanTicketRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var order models.Order
+	// Find order by TicketCode (SECURE)
+	if err := config.DB.Preload("User").Preload("Items.Ticket.Destination").Where("ticket_code = ?", req.QRCode).First(&order).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"valid": false, "message": "Tiket (Kode Reservasi) TIDAK DITEMUKAN / Invalid"})
+		return
+	}
+
+	// 1. Check Payment
+	if order.PaymentStatus != "PAID" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"valid":   false,
+			"message": "STOP: Tiket BELUM LUNAS (Unpaid)",
+			"data":    order,
+		})
+		return
+	}
+
+	// 2. Check Order Status
+	if order.Status == "COMPLETED" {
+		c.JSON(http.StatusConflict, gin.H{ // 409 Conflict
+			"valid":   false,
+			"message": "ALARM: Tiket SUDAH DIPAKAI (Already Scanned)!",
+			"used_at": order.UpdatedAt.Format("02 Jan 2006 15:04"),
+			"data":    order,
+		})
+		return
+	}
+
+	if order.Status == "CANCELLED" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"valid":   false,
+			"message": "STOP: Tiket DIBATALKAN (Void)",
+			"data":    order,
+		})
+		return
+	}
+
+	if order.Status != "CONFIRMED" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"valid":   false,
+			"message": "Tiket belum dikonfirmasi (Pending)",
+			"data":    order,
+		})
+		return
+	}
+
+	// 3. Success -> Mark as Used (Check-in)
+	order.Status = "COMPLETED"
+	if err := config.DB.Save(&order).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal update status check-in"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"valid":   true,
+		"message": "✅ Check-in BERHASIL. Silakan Masuk.",
+		"data": gin.H{
+			"visitor_name": order.VisitorName,
+			"order_no":     order.OrderNo,
+			"visit_date":   order.BookingDate.Format("02 Jan 2006"),
+			"pax":          len(order.Items), // Simplified pax count
+			"items":        order.Items,
+			"check_in_at":  time.Now(),
+		},
+	})
 }

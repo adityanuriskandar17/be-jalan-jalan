@@ -133,6 +133,7 @@ type Order struct {
 	UserID      uint   `gorm:"index;not null" json:"user_id"`
 	PromoCodeID *uint  `gorm:"index" json:"promo_code_id"` // Nullable
 	OrderNo     string `gorm:"type:varchar(50);uniqueIndex;not null" json:"order_no"`
+	TicketCode  string `gorm:"type:varchar(50);uniqueIndex" json:"ticket_code"` // Secure Random Code for QR
 
 	// Snapshot Visitor Info (Data Pemesan)
 	VisitorName  string `gorm:"type:varchar(100)" json:"visitor_name"`
