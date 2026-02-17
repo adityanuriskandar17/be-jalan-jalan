@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // RegisterRequest represents the JSON body for user registration
@@ -77,6 +79,7 @@ type User struct {
 	PhoneVerificationToken  string     `json:"-"`
 	PhoneVerificationExpiry *time.Time `json:"-"`
 
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }

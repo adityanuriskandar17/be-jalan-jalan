@@ -42,6 +42,18 @@ func padLeft(str, pad string, length int) string {
 	return str
 }
 
+// Helper function to hash OTP
+func hashOTP(otp string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(otp), 14)
+	return string(bytes), err
+}
+
+// Helper function to check OTP hash
+func checkOTPHash(otp, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(otp))
+	return err == nil
+}
+
 // Register handles user registration
 func Register(c *gin.Context) {
 	var req models.RegisterRequest
@@ -76,15 +88,24 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate Email OTP"})
 		return
 	}
+	hashEmailOTP, err := hashOTP(emailOTP)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process Email OTP"})
+		return
+	}
 
 	phoneOTP, err := generateOTP()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate Phone OTP"})
 		return
 	}
+	hashPhoneOTP, err := hashOTP(phoneOTP)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process Phone OTP"})
+		return
+	}
 
-	expiryTime := time.Now().Add(24 * time.Hour) // 24 hours for registration verification? or 15 mins? sticking to 15 mins for consistency or 24h as per common practice for links, but OTPs usually short lived. Let's do 15 mins.
-	expiryTime = time.Now().Add(15 * time.Minute)
+	expiryTime := time.Now().Add(15 * time.Minute)
 
 	newUser := models.User{
 		FullName:    req.FullName,
@@ -92,11 +113,11 @@ func Register(c *gin.Context) {
 		PhoneNumber: req.PhoneNumber,
 		Password:    hashedPassword,
 
-		EmailVerificationToken:  emailOTP,
+		EmailVerificationToken:  hashEmailOTP,
 		EmailVerificationExpiry: &expiryTime,
 		IsEmailVerified:         false,
 
-		PhoneVerificationToken:  phoneOTP,
+		PhoneVerificationToken:  hashPhoneOTP,
 		PhoneVerificationExpiry: &expiryTime,
 		IsPhoneVerified:         false,
 	}
@@ -106,8 +127,8 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// TODO: Send Email OTP
-	// TODO: Send SMS OTP
+	// TODO: Send Email OTP (emailOTP)
+	// TODO: Send SMS OTP (phoneOTP)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Registrasi berhasil. Silakan verifikasi email dan nomor telepon Anda.",
@@ -139,7 +160,7 @@ func VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	if user.EmailVerificationToken != req.OTP {
+	if !checkOTPHash(req.OTP, user.EmailVerificationToken) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid OTP"})
 		return
 	}
@@ -182,7 +203,7 @@ func VerifyPhone(c *gin.Context) {
 		return
 	}
 
-	if user.PhoneVerificationToken != req.OTP {
+	if !checkOTPHash(req.OTP, user.PhoneVerificationToken) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid OTP"})
 		return
 	}
@@ -267,10 +288,15 @@ func ForgotPassword(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate OTP"})
 		return
 	}
+	hashOTP, err := hashOTP(otp)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process OTP"})
+		return
+	}
 
 	// Set OTP and expiration (15 minutes)
 	expiryTime := time.Now().Add(15 * time.Minute)
-	user.ForgotPasswordToken = otp
+	user.ForgotPasswordToken = hashOTP
 	user.ForgotPasswordTokenExpiry = &expiryTime
 
 	if result := config.DB.Save(&user); result.Error != nil {
@@ -301,7 +327,7 @@ func VerifyOTP(c *gin.Context) {
 		return
 	}
 
-	if user.ForgotPasswordToken != req.OTP {
+	if !checkOTPHash(req.OTP, user.ForgotPasswordToken) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid OTP"})
 		return
 	}
@@ -331,7 +357,7 @@ func ResetPassword(c *gin.Context) {
 	}
 
 	// Re-verify OTP for security (stateless check)
-	if user.ForgotPasswordToken != req.OTP {
+	if !checkOTPHash(req.OTP, user.ForgotPasswordToken) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid OTP"})
 		return
 	}
