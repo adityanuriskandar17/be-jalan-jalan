@@ -79,6 +79,8 @@ type User struct {
 	PhoneVerificationToken  string     `json:"-"`
 	PhoneVerificationExpiry *time.Time `json:"-"`
 
+	IsActive bool `gorm:"default:true" json:"is_active"` // For Suspend/Active Status
+
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
