@@ -172,6 +172,40 @@ func SeedTravelData(db *gorm.DB) {
 		}
 		db.Create(&order2)
 
-		log.Println("✅ Seeded Travel Data & Dummy Orders")
+		// ... existing code ...
+		log.Println("✅ Seeded Travel Data, Users & Orders")
+	}
+
+	// 6. Seed Promo Codes
+	promos := []models.PromoCode{
+		{
+			Code:           "WEEKEND50",
+			Title:          "Diskon Weekend 50%",
+			Description:    "Dapatkan diskon 50% untuk booking weekend",
+			DiscountType:   "PERCENTAGE",
+			DiscountValue:  50,
+			MaxDiscount:    100000,
+			MinTransaction: 50000,
+			ValidFrom:      time.Now(),
+			ValidUntil:     time.Now().AddDate(0, 1, 0),
+			Quota:          100,
+			IsActive:       true,
+		},
+		{
+			Code:           "SAFARI25",
+			Title:          "Diskon Safari 25K",
+			Description:    "Potongan Rp 25.000 untuk Solo Safari",
+			DiscountType:   "FIXED",
+			DiscountValue:  25000,
+			MinTransaction: 100000,
+			ValidFrom:      time.Now(),
+			ValidUntil:     time.Now().AddDate(0, 2, 0),
+			Quota:          50,
+			IsActive:       true,
+		},
+	}
+
+	for _, p := range promos {
+		db.FirstOrCreate(&p, models.PromoCode{Code: p.Code})
 	}
 }
