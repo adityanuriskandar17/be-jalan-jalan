@@ -94,9 +94,17 @@ func main() {
 		adminGroup.GET("/promos", handlers.GetPromos)
 		adminGroup.GET("/promos/:id", handlers.GetPromoDetail)
 		adminGroup.POST("/promos", handlers.CreatePromo)
-		adminGroup.POST("/promos/check", handlers.CheckPromo) // New: Check/Calculate Promo
+		adminGroup.POST("/promos/check", handlers.CheckPromo)   // New: Check/Calculate Promo
+		adminGroup.GET("/promos/export", handlers.ExportPromos) // New: Export
 		adminGroup.PUT("/promos/:id", handlers.UpdatePromo)
 		adminGroup.DELETE("/promos/:id", handlers.DeletePromo)
+
+		// Payments
+		adminGroup.GET("/payments/stats", handlers.GetPaymentStats)
+		adminGroup.GET("/payments", handlers.GetPayments)
+		adminGroup.GET("/payments/:id", handlers.GetPaymentDetail) // New: Detail
+		adminGroup.POST("/payments/:id/confirm", handlers.ConfirmPayment)
+		adminGroup.POST("/payments/:id/reject", handlers.RejectPayment)
 	}
 
 	r.Run(":8080") // listen and serve on 0.0.0.0:8080

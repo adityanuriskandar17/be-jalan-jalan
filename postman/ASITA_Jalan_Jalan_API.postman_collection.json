@@ -466,6 +466,22 @@
 							}
 						},
 						{
+							"name": "Export",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": {
+									"raw": "{{base_url}}/admin/promos/export?format=csv&search=",
+									"host": ["{{base_url}}"],
+									"path": ["admin", "promos", "export"],
+									"query": [
+										{"key": "format", "value": "csv", "description": "csv, xlsx, json"},
+										{"key": "search", "value": ""}
+									]
+								}
+							}
+						},
+						{
 							"name": "Detail",
 							"request": {
 								"method": "GET",
@@ -483,6 +499,18 @@
 									"raw": "{\n  \"code\": \"WEEKEND50\",\n  \"title\": \"Diskon Weekend 50%\",\n  \"description\": \"Potongan harga khusus akhir pekan\",\n  \"discount_type\": \"PERCENTAGE\",\n  \"discount_value\": 50,\n  \"min_transaction\": 50000,\n  \"max_discount\": 100000,\n  \"valid_from\": \"2026-02-01\",\n  \"valid_until\": \"2026-02-28\",\n  \"quota\": 100,\n  \"is_active\": true\n}"
 								},
 								"url": "{{base_url}}/admin/promos"
+							}
+						},
+						{
+							"name": "Check (Calculate)",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"code\": \"WEEKEND50\",\n  \"amount\": 150000\n}"
+								},
+								"url": "{{base_url}}/admin/promos/check"
 							}
 						},
 						{
@@ -630,6 +658,59 @@
 								"method": "DELETE",
 								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
 								"url": "{{base_url}}/admin/tickets/1"
+							}
+						}
+					]
+				},
+				{
+					"name": "Payments",
+					"item": [
+						{
+							"name": "Stats",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/payments/stats"
+							}
+						},
+						{
+							"name": "List",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": {
+									"raw": "{{base_url}}/admin/payments?search=&status=",
+									"host": ["{{base_url}}"],
+									"path": ["admin", "payments"],
+									"query": [
+										{"key": "search", "value": ""},
+										{"key": "status", "value": ""}
+									]
+								}
+							}
+						},
+						{
+							"name": "Detail",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/payments/1"
+							}
+						},
+						{
+							"name": "Confirm Payment",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/payments/1/confirm"
+							}
+						},
+						{
+							"name": "Reject Payment",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/payments/1/reject"
 							}
 						}
 					]

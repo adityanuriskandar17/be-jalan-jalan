@@ -3,12 +3,15 @@ package handlers
 import (
 	"be-jalan/config"
 	"be-jalan/models"
+	"encoding/csv"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xuri/excelize/v2"
 )
 
 // --- Structs for Requests ---
@@ -278,5 +281,91 @@ func DeletePromo(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete promo"})
 		return
 	}
+	// ... existing code ...
 	c.JSON(http.StatusOK, gin.H{"message": "Promo deleted"})
+}
+
+// ExportPromos exports promo data to CSV, Excel, or JSON
+func ExportPromos(c *gin.Context) {
+	format := c.Query("format")
+	var promos []models.PromoCode
+	query := config.DB.Model(&models.PromoCode{})
+
+	// Search (Optional: Export filtered data)
+	search := c.Query("search")
+	if search != "" {
+		query = query.Where("code ILIKE ? OR title ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	if err := query.Find(&promos).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch promos"})
+		return
+	}
+
+	switch format {
+	case "csv":
+		c.Header("Content-Disposition", "attachment; filename=promos.csv")
+		c.Header("Content-Type", "text/csv")
+		writer := csv.NewWriter(c.Writer)
+		writer.Write([]string{"ID", "Code", "Title", "Discount Type", "Discount Value", "Quota", "Used", "Status", "Valid From", "Valid Only"})
+		for _, p := range promos {
+			writer.Write([]string{
+				strconv.Itoa(int(p.ID)),
+				p.Code,
+				p.Title,
+				p.DiscountType,
+				fmt.Sprintf("%.2f", p.DiscountValue),
+				strconv.Itoa(p.Quota),
+				strconv.Itoa(p.UsedCount),
+				strconv.FormatBool(p.IsActive),
+				p.ValidFrom.Format("2006-01-02"),
+				p.ValidUntil.Format("2006-01-02"),
+			})
+		}
+		writer.Flush()
+
+	case "xlsx":
+		f := excelize.NewFile()
+		sheetName := "Promos"
+		f.SetSheetName("Sheet1", sheetName)
+
+		// Header
+		headers := []string{"ID", "Code", "Title", "Discount Type", "Discount Value", "Quota", "Used", "Status", "Valid From", "Valid Only"}
+		for i, h := range headers {
+			cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+			f.SetCellValue(sheetName, cell, h)
+		}
+
+		// Data
+		for i, p := range promos {
+			row := i + 2
+			f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), p.ID)
+			f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), p.Code)
+			f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), p.Title)
+			f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), p.DiscountType)
+			f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), p.DiscountValue)
+			f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), p.Quota)
+			f.SetCellValue(sheetName, fmt.Sprintf("G%d", row), p.UsedCount)
+			status := "Inactive"
+			if p.IsActive {
+				status = "Active"
+			}
+			f.SetCellValue(sheetName, fmt.Sprintf("H%d", row), status)
+			f.SetCellValue(sheetName, fmt.Sprintf("I%d", row), p.ValidFrom.Format("2006-01-02"))
+			f.SetCellValue(sheetName, fmt.Sprintf("J%d", row), p.ValidUntil.Format("2006-01-02"))
+		}
+
+		c.Header("Content-Disposition", "attachment; filename=promos.xlsx")
+		c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+		if err := f.Write(c.Writer); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate excel"})
+		}
+
+	case "json":
+		c.Header("Content-Disposition", "attachment; filename=promos.json")
+		c.JSON(http.StatusOK, promos)
+
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid format. Use csv, xlsx, or json"})
+	}
 }
