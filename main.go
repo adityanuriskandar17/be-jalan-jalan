@@ -24,14 +24,24 @@ func main() {
 		&models.Order{},
 		&models.OrderItem{},
 		&models.PromoCode{},
+		&models.ChatRoom{},
+		&models.Message{},
+		&models.Setting{},
 	)
 
 	// Seed Initial Data (Admin Users & Travel Data)
 	database.SeedUsers(config.DB)
 	database.SeedTravelData(config.DB)
+	database.SeedSettings(config.DB)
+
+	// Start Chat Hub
+	go handlers.ChatHub.Run()
 
 	r := gin.Default()
 	r.Static("/uploads", "./uploads")
+
+	// WebSocket Endpoint
+	r.GET("/ws", handlers.ServeWS)
 
 	authGroup := r.Group("/api/v1/auth")
 	{
@@ -43,8 +53,10 @@ func main() {
 		authGroup.POST("/verify-otp", handlers.VerifyOTP)
 		authGroup.POST("/reset-password", handlers.ResetPassword)
 		authGroup.POST("/google", handlers.GoogleAuth)
-
 	}
+
+	// Helper for User Chat Init (Public or Authed)
+	r.POST("/api/v1/chat/init", handlers.InitChat)
 
 	adminGroup := r.Group("/api/v1/admin")
 	adminGroup.Use(middleware.AuthMiddleware())
@@ -105,6 +117,20 @@ func main() {
 		adminGroup.GET("/payments/:id", handlers.GetPaymentDetail) // New: Detail
 		adminGroup.POST("/payments/:id/confirm", handlers.ConfirmPayment)
 		adminGroup.POST("/payments/:id/reject", handlers.RejectPayment)
+
+		// Reports
+		adminGroup.GET("/reports/dashboard", handlers.GetDashboardReports)
+		adminGroup.GET("/reports/export", handlers.ExportReports)
+
+		// Live Chat Support
+		adminGroup.GET("/chats", handlers.GetChatRooms)
+		adminGroup.GET("/chats/:id/messages", handlers.GetChatMessages)
+		adminGroup.POST("/chats/:id/join", handlers.JoinChat)
+		adminGroup.POST("/chats/:id/resolve", handlers.ResolveChat)
+
+		// System Settings
+		adminGroup.GET("/settings", handlers.GetSettings)
+		adminGroup.PUT("/settings", handlers.UpdateSettings)
 	}
 
 	r.Run(":8080") // listen and serve on 0.0.0.0:8080

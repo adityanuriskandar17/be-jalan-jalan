@@ -716,6 +716,121 @@
 					]
 				},
 				{
+					"name": "Reports",
+					"item": [
+						{
+							"name": "Dashboard Analytics",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": {
+									"raw": "{{base_url}}/admin/reports/dashboard?period=6_months&start_date=&end_date=",
+									"host": ["{{base_url}}"],
+									"path": ["admin", "reports", "dashboard"],
+									"query": [
+										{"key": "period", "value": "6_months", "description": "7_days, 30_days, 3_months, 6_months, 1_year"},
+										{"key": "start_date", "value": "", "description": "YYYY-MM-DD (Optional, overrides period)"},
+										{"key": "end_date", "value": "", "description": "YYYY-MM-DD (Optional, overrides period)"}
+									]
+								}
+							}
+						},
+						{
+							"name": "Export Report",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": {
+									"raw": "{{base_url}}/admin/reports/export?format=csv",
+									"host": ["{{base_url}}"],
+									"path": ["admin", "reports", "export"],
+									"query": [
+										{"key": "format", "value": "csv", "description": "csv, xlsx, json"}
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Live Chat",
+					"item": [
+						{
+							"name": "Init Chat (User)",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"user_id\": 2\n}"
+								},
+								"url": "{{base_url}}/chat/init"
+							}
+						},
+						{
+							"name": "List Rooms (Admin)",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/chats?status=OPEN"
+							}
+						},
+						{
+							"name": "Get Messages",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/chats/1/messages"
+							}
+						},
+						{
+							"name": "Join/Assign Chat",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"admin_id\": 1\n}"
+								},
+								"url": "{{base_url}}/admin/chats/1/join"
+							}
+						},
+						{
+							"name": "Resolve Chat",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/chats/1/resolve"
+							}
+						}
+					]
+				},
+				{
+					"name": "Settings",
+					"item": [
+						{
+							"name": "Get Settings",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/settings"
+							}
+						},
+						{
+							"name": "Update Settings",
+							"request": {
+								"method": "PUT",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"payment_qris_enabled\": false,\n  \"app_name\": \"JalanJalanYuk Update\"\n}"
+								},
+								"url": "{{base_url}}/admin/settings"
+							}
+						}
+					]
+				},
+				{
 					"name": "Categories",
 					"item": [
 						{
