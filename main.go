@@ -94,6 +94,7 @@ func main() {
 		adminGroup.GET("/promos", handlers.GetPromos)
 		adminGroup.GET("/promos/:id", handlers.GetPromoDetail)
 		adminGroup.POST("/promos", handlers.CreatePromo)
+		adminGroup.POST("/promos/check", handlers.CheckPromo) // New: Check/Calculate Promo
 		adminGroup.PUT("/promos/:id", handlers.UpdatePromo)
 		adminGroup.DELETE("/promos/:id", handlers.DeletePromo)
 	}
