@@ -131,6 +131,13 @@ func main() {
 		// System Settings
 		adminGroup.GET("/settings", handlers.GetSettings)
 		adminGroup.PUT("/settings", handlers.UpdateSettings)
+
+		// Admin Management
+		adminGroup.GET("/admins/stats", handlers.GetAdminStats)
+		adminGroup.GET("/admins", handlers.GetAdmins)
+		adminGroup.POST("/admins", handlers.CreateAdmin)
+		adminGroup.PUT("/admins/:id", handlers.UpdateAdmin)
+		adminGroup.DELETE("/admins/:id", handlers.DeleteAdmin)
 	}
 
 	r.Run(":8080") // listen and serve on 0.0.0.0:8080

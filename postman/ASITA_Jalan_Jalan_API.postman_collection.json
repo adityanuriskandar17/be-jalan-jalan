@@ -831,6 +831,67 @@
 					]
 				},
 				{
+					"name": "Admin Management",
+					"item": [
+						{
+							"name": "Admin Stats",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/admins/stats"
+							}
+						},
+						{
+							"name": "List Admins",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": {
+									"raw": "{{base_url}}/admin/admins?role=&search=",
+									"host": ["{{base_url}}"],
+									"path": ["admin", "admins"],
+									"query": [
+										{"key": "role", "value": "", "description": "admin, super_admin, customer_service"},
+										{"key": "search", "value": "", "description": "name or email"}
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Admin",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"full_name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"admin\"\n}"
+								},
+								"url": "{{base_url}}/admin/admins"
+							}
+						},
+						{
+							"name": "Update Admin",
+							"request": {
+								"method": "PUT",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"full_name\": \"John Doe Updated\",\n  \"role\": \"super_admin\"\n}"
+								},
+								"url": "{{base_url}}/admin/admins/admin_id"
+							}
+						},
+						{
+							"name": "Delete Admin",
+							"request": {
+								"method": "DELETE",
+								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+								"url": "{{base_url}}/admin/admins/admin_id"
+							}
+						}
+					]
+				},
+				{
 					"name": "Categories",
 					"item": [
 						{

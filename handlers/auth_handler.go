@@ -280,6 +280,10 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Update LastLogin
+	now := time.Now()
+	config.DB.Model(&user).Update("last_login", now)
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login berhasil",
 		"data": gin.H{
